@@ -2,14 +2,12 @@ import Piece from './piece'
 
 class Game {
   constructor() {
-    console.log('constructor')
     this.blankMap = []
     this.redPieces = []
     this.blackPieces = []
   }
 
   initGame() {
-    console.log('init')
     this.blankMap = this.initBlankMap()
     this.redPieces = this.initRedPieces()
     this.blackPieces = this.initBlackPieces()
