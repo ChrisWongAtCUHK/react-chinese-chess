@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Game from './game'
+import Rule from './game/rule'
 import './App.css'
 
 const resize = () => {
@@ -19,10 +20,11 @@ function App() {
   const [winCamp, setWinCamp] = useState(0)
   const [over, setOver] = useState(false)
   const [blankMap] = useState(Game.getBlankMap())
-  const [blackPieces] = useState(Game.getBlackPieces())
-  const [redPieces] = useState(Game.getRedPieces())
+  const [blackPieces, setBlackPieces] = useState(Game.getBlackPieces())
+  const [redPieces, setRedPieces] = useState(Game.getRedPieces())
   const [highLightPoint, setHighLightPoint] = useState([])
-  const [needMovePiece] = useState(null)
+  const [movedPointList, setMovedPointList] = useState([])
+  const [needMovePiece, setNeedMovePiece] = useState(null)
 
   const begin = () => {}
 
@@ -65,6 +67,72 @@ function App() {
     return { left: `${x}rem`, bottom: `${y}rem` }
   }
 
+  const gameOver = (camp) => {
+    setWinCamp(camp)
+    setOver(true)
+  }
+
+  const getPieceIndexByName = (pieces, piece) => {
+    for (let index in pieces) {
+      if (pieces[index].name === piece.name) {
+        return index
+      }
+    }
+  }
+
+  const removePiece = (piece) => {
+    if (piece.name === 'k') {
+      gameOver(-piece.camp)
+    }
+    if (piece.camp === 1) {
+      const index = getPieceIndexByName(redPieces, piece)
+      setRedPieces((prev) => {
+        prev.splice(index, 1)
+        return prev
+      })
+    } else {
+      const index = getPieceIndexByName(blackPieces, piece)
+      setBlackPieces((prev) => {
+        prev.splice(index, 1)
+        return prev
+      })
+    }
+  }
+
+  const moveToAnim = (currentNeedMovePiece, targetPiece) => {
+    if (Rule.canMove(currentNeedMovePiece, targetPiece, highLightPoint)) {
+      let removedPiece = null // 被删除的棋子，悔棋时需要还原
+      const beforeMovePiece = currentNeedMovePiece.copy() // 移动前的棋子
+      if (targetPiece.camp && targetPiece.camp !== currentNeedMovePiece.camp) {
+        removedPiece = targetPiece
+        removePiece(targetPiece)
+      }
+      currentNeedMovePiece.moveTo(targetPiece.position)
+      const movedPiece = currentNeedMovePiece.copy() // 移动后的棋子
+      setNextCamp((prev) => -prev)
+      // 清除状态
+      setNeedMovePiece(null)
+      setHighLightPoint([])
+      setMovedPointList((prev) => [
+        ...prev,
+        {
+          beforeMovePiece,
+          movedPiece,
+          removedPiece,
+        },
+      ])
+    }
+  }
+
+  const clickPiece = (piece) => {
+    if (needMovePiece && needMovePiece.camp !== piece.camp) {
+      moveToAnim(needMovePiece, piece)
+    } else if (piece.camp && piece.camp === nextCamp) {
+      setNeedMovePiece(piece)
+      setHighLightPoint(Rule.getMoveLine(piece))
+    }
+  }
+
   useEffect(() => {
     resize()
     document.addEventListener('resize', resize)
@@ -84,6 +152,7 @@ function App() {
                 className={`piece blank-item ${handleHighLight(item)}`}
                 style={handlePosition(item.position)}
                 key={`black${index}`}
+                onClick={() => clickPiece(item)}
               ></div>
             )
           })}
@@ -93,6 +162,7 @@ function App() {
                 className={`piece black-${item.name} ${handleHighLight(item)}`}
                 style={handlePosition(item.position)}
                 key={`black${item.name}`}
+                onClick={() => clickPiece(item)}
               ></div>
             )
           })}
@@ -102,6 +172,7 @@ function App() {
                 className={`piece red-${item.name} ${handleHighLight(item)}`}
                 style={handlePosition(item.position)}
                 key={`red${item.name}`}
+                onClick={() => clickPiece(item)}
               ></div>
             )
           })}
