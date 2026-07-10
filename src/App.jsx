@@ -87,6 +87,15 @@ function App() {
               ></div>
             )
           })}
+          {blackPieces.map((item) => {
+            return (
+              <div
+                className={`piece black-${item.name} ${handleHighLight(item)}`}
+                style={handlePosition(item.position)}
+                key={`black${item.name}`}
+              ></div>
+            )
+          })}
         </div>
       </div>
     </div>
