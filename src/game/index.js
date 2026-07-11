@@ -94,6 +94,14 @@ class Game {
       new Piece('k', [5, 10], -1),
     ]
   }
+
+  setRedPieces(pieces) {
+    this.redPieces = [...pieces]
+  }
+
+  setBlackPieces(pieces) {
+    this.blackPieces = [...pieces]
+  }
 }
 
 export default new Game()

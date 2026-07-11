@@ -15,13 +15,15 @@ const resize = () => {
 }
 
 function App() {
-  Game.initGame()
   const [nextCamp, setNextCamp] = useState(1)
   const [winCamp, setWinCamp] = useState(0)
   const [over, setOver] = useState(false)
-  const [blankMap] = useState(Game.getBlankMap())
-  const [blackPieces, setBlackPieces] = useState(Game.getBlackPieces())
-  const [redPieces, setRedPieces] = useState(Game.getRedPieces())
+  const [blankMap] = useState(() => {
+    Game.initGame()
+    return Game.getBlankMap()
+  })
+  const [blackPieces, setBlackPieces] = useState(() => Game.getBlackPieces())
+  const [redPieces, setRedPieces] = useState(() => Game.getRedPieces())
   const [highLightPoint, setHighLightPoint] = useState([])
   const [movedPointList, setMovedPointList] = useState([])
   const [needMovePiece, setNeedMovePiece] = useState(null)
@@ -109,6 +111,28 @@ function App() {
       }
       currentNeedMovePiece.moveTo(targetPiece.position)
       const movedPiece = currentNeedMovePiece.copy() // 移动后的棋子
+      // update the pieces in App
+      // update the pieces in Game
+      if (currentNeedMovePiece.camp === 1) {
+        setRedPieces((prev) => {
+          const next = prev.filter(
+            (piece) => piece.name !== currentNeedMovePiece.name,
+          )
+          const pieces = [...next, currentNeedMovePiece]
+          Game.setRedPieces(pieces)
+          return pieces
+        })
+      } else if (currentNeedMovePiece.camp === -1) {
+        setBlackPieces((prev) => {
+          const next = prev.filter(
+            (piece) => piece.name !== currentNeedMovePiece.name,
+          )
+          const pieces = [...next, currentNeedMovePiece]
+          Game.setBlackPieces(pieces)
+          return pieces
+        })
+      }
+
       setNextCamp((prev) => -prev)
       // 清除状态
       setNeedMovePiece(null)
@@ -127,6 +151,8 @@ function App() {
   const clickPiece = (piece) => {
     if (needMovePiece && needMovePiece.camp !== piece.camp) {
       moveToAnim(needMovePiece, piece)
+      setNeedMovePiece(null)
+      setHighLightPoint([])
     } else if (piece.camp && piece.camp === nextCamp) {
       setNeedMovePiece(piece)
       setHighLightPoint(Rule.getMoveLine(piece))
