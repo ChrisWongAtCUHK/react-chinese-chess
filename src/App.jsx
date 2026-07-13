@@ -85,18 +85,21 @@ function App() {
   const removePiece = (piece) => {
     if (piece.name === 'k') {
       gameOver(-piece.camp)
+      return
     }
     if (piece.camp === 1) {
       const index = getPieceIndexByName(redPieces, piece)
       setRedPieces((prev) => {
-        prev.splice(index, 1)
-        return prev
+        const next = [...prev]
+        next.splice(index, 1)
+        return next
       })
     } else {
       const index = getPieceIndexByName(blackPieces, piece)
       setBlackPieces((prev) => {
-        prev.splice(index, 1)
-        return prev
+        const next = [...prev]
+        next.splice(index, 1)
+        return next
       })
     }
   }
