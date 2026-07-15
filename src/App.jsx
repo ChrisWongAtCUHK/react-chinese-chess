@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Game from './game'
 import Rule from './game/rule'
+import { getBestMovePiece } from './game/robot'
 import './App.css'
 
 const resize = () => {
@@ -91,8 +92,14 @@ function App() {
     pieces.splice(index, 1)
   }
 
-  const moveToAnim = (currentNeedMovePiece, targetPiece) => {
-    if (Rule.canMove(currentNeedMovePiece, targetPiece, highLightPoint)) {
+  const moveToAnim = (
+    currentNeedMovePiece,
+    targetPiece,
+    currentHighLightPoint = highLightPoint,
+  ) => {
+    if (
+      Rule.canMove(currentNeedMovePiece, targetPiece, currentHighLightPoint)
+    ) {
       let removedPiece = null // 被删除的棋子，悔棋时需要还原
       const beforeMovePiece = currentNeedMovePiece.copy() // 移动前的棋子
       if (targetPiece.camp && targetPiece.camp !== currentNeedMovePiece.camp) {
@@ -204,6 +211,20 @@ function App() {
     setNextCamp((prev) => -prev)
   }
 
+  const robot = () => {
+    const robotMovePiece = getBestMovePiece(nextCamp)
+    if (!robotMovePiece) {
+      return console.warn('人机计算失败')
+    }
+    const currentHighLightPoint = robotMovePiece.canMovePositions
+    setHighLightPoint(currentHighLightPoint)
+    moveToAnim(
+      robotMovePiece.needMovePiece,
+      robotMovePiece.targetPiece,
+      currentHighLightPoint,
+    )
+  }
+
   useEffect(() => {
     resize()
     document.addEventListener('resize', resize)
@@ -219,6 +240,7 @@ function App() {
         {nextCamp > 0 ? '红棋' : '黑棋'}
         <div className="options">
           <div onClick={() => backStep()}>悔棋</div>
+          <div onClick={() => robot()}>人机</div>
         </div>
       </div>
       <div className="board">
