@@ -82,26 +82,13 @@ function App() {
     }
   }
 
-  const removePiece = (piece) => {
+  const removePiece = (piece, pieces) => {
     if (piece.name === 'k') {
       gameOver(-piece.camp)
       return
     }
-    if (piece.camp === 1) {
-      const index = getPieceIndexByName(redPieces, piece)
-      setRedPieces((prev) => {
-        const next = [...prev]
-        next.splice(index, 1)
-        return next
-      })
-    } else {
-      const index = getPieceIndexByName(blackPieces, piece)
-      setBlackPieces((prev) => {
-        const next = [...prev]
-        next.splice(index, 1)
-        return next
-      })
-    }
+    const index = getPieceIndexByName(pieces, piece)
+    pieces.splice(index, 1)
   }
 
   const moveToAnim = (currentNeedMovePiece, targetPiece) => {
@@ -110,7 +97,14 @@ function App() {
       const beforeMovePiece = currentNeedMovePiece.copy() // 移动前的棋子
       if (targetPiece.camp && targetPiece.camp !== currentNeedMovePiece.camp) {
         removedPiece = targetPiece
-        removePiece(targetPiece)
+        const pieces =
+          targetPiece.camp === 1 ? [...redPieces] : [...blackPieces]
+        removePiece(targetPiece, pieces)
+        if (targetPiece.camp === 1) {
+          setRedPieces(pieces)
+        } else {
+          setBlackPieces(pieces)
+        }
       }
       currentNeedMovePiece.moveTo(targetPiece.position)
       const movedPiece = currentNeedMovePiece.copy() // 移动后的棋子
@@ -162,6 +156,47 @@ function App() {
     }
   }
 
+  const addPiece = (piece, pieces) => {
+    if (!piece) return
+    pieces.push(piece)
+  }
+
+  const backStep = () => {
+    const nextMovedPointList = [...movedPointList]
+    const step = nextMovedPointList.pop() || null
+
+    if (!step) {
+      return
+    }
+
+    setMovedPointList(nextMovedPointList)
+    const currentRedPieces = [...redPieces]
+    const currentBlackPieces = [...blackPieces]
+    removePiece(
+      step.movedPiece,
+      step.movedPiece.camp === 1 ? currentRedPieces : currentBlackPieces,
+    )
+    if (step.beforeMovePiece && step.beforeMovePiece.camp) {
+      addPiece(
+        step.beforeMovePiece,
+        step.beforeMovePiece.camp === 1 ? currentRedPieces : currentBlackPieces,
+      )
+    }
+
+    if (step.removedPiece && step.removedPiece.camp) {
+      addPiece(
+        step.removedPiece,
+        step.removedPiece.camp === 1 ? currentRedPieces : currentBlackPieces,
+      )
+    }
+
+    setRedPieces(currentRedPieces)
+    Game.setRedPieces(currentRedPieces)
+    setBlackPieces(currentBlackPieces)
+    Game.setBlackPieces(currentBlackPieces)
+    setNextCamp((prev) => -prev)
+  }
+
   useEffect(() => {
     resize()
     document.addEventListener('resize', resize)
@@ -173,6 +208,12 @@ function App() {
 
   return (
     <div>
+      <div className={`status ${nextCamp > 0 ? 'red' : ''}`}>
+        {nextCamp > 0 ? '红棋' : '黑棋'}
+        <div className="options">
+          <div onClick={() => backStep()}>悔棋</div>
+        </div>
+      </div>
       <div className="board">
         <div className="board-wrap">
           {blankMap.map((item, index) => {
