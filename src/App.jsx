@@ -169,6 +169,12 @@ function App() {
       return
     }
 
+    // cleanup if necessary
+    if (needMovePiece) {
+      setNeedMovePiece(null)
+      setHighLightPoint([])
+    }
+
     setMovedPointList(nextMovedPointList)
     const currentRedPieces = [...redPieces]
     const currentBlackPieces = [...blackPieces]
@@ -194,6 +200,7 @@ function App() {
     Game.setRedPieces(currentRedPieces)
     setBlackPieces(currentBlackPieces)
     Game.setBlackPieces(currentBlackPieces)
+
     setNextCamp((prev) => -prev)
   }
 
